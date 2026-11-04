@@ -4,7 +4,7 @@ CREATE TABLE raw.account(
 account_id INTEGER,
 district_id INTEGER,
 frequency TEXT,
-date TEXT
+opened_date TEXT
 );
 CREATE TABLE raw.card(
 card_id INTEGER,
@@ -44,7 +44,7 @@ no_of_crimes_committed_1996 INTEGER
 CREATE TABLE raw.loan(
 loan_id INTEGER,
 account_id INTEGER,
-date DATE,
+loan_date DATE,
 amount NUMERIC,
 duration INTEGER,
 payments NUMERIC,
@@ -61,7 +61,7 @@ k_symbol TEXT
 CREATE TABLE raw.trans(
 trans_id INTEGER,
 account_id INTEGER,
-date DATE,
+transaction_date DATE,
 type TEXT,
 operation TEXT,
 amount NUMERIC,
