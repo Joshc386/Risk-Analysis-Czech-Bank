@@ -13,4 +13,4 @@ Implementing constraints into most rows also was necessary but predominantly 'NO
 References was very important also to establish relationships between the tables otherwise the schema would be non-relational. This also dictated the order in which tables were created.
 
 # Preliminary Analysis
-This was done in the 'Preliminary.sql' file and essentially was used to explore the data and produce some summary statistics and assess the structure fully. There are 8 tables 
+This was done in the 'Preliminary.sql' file and essentially was used to explore the data and produce some summary statistics and assess the structure fully. There are 8 tables which are related to one another and displayed in the image here XXX. There are 682 loans in total, 
