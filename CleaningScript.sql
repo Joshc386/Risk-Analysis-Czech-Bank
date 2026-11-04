@@ -1,3 +1,4 @@
+ROLLBACK;
 BEGIN;
 
 DROP SCHEMA IF EXISTS clean CASCADE;
@@ -5,23 +6,6 @@ DROP SCHEMA IF EXISTS ref CASCADE;
 
 CREATE SCHEMA ref;
 CREATE SCHEMA clean;
-
-
-CREATE TABLE ref.k_symbol(
-code TEXT PRIMARY KEY,
-label TEXT NOT NULL
-);
-
-INSERT INTO ref.k_symbol(code, label) VALUES
-('POJISTNE',    'insurance'),
-('SLUZBY',      'statement fee'),
-('UROK',        'interest credited'),
-('SANKC. UROK', 'penalty interest'),
-('SIPO',        'household bills'),
-('DUCHOD',      'pension'),
-('UVER',        'loan payment'),
-('LEASING',     'leasing');
-
 
 CREATE TABLE clean.district (
   district_id             INTEGER PRIMARY KEY,
@@ -83,6 +67,34 @@ END,
 to_date(TRIM(opened_date), 'YYMMDD')
 FROM raw.account;
 
+CREATE TABLE clean.client(
+client_id INTEGER PRIMARY KEY,
+birth_date DATE NOT NULL CONSTRAINT check_client_birthdate CHECK (birth_date < '1999-01-01'),
+gender TEXT NOT NULL CONSTRAINT check_client_gender CHECK (gender IN ('M','F')),
+district_id INTEGER NOT NULL REFERENCES clean.district (district_id)
+);
+
+WITH parts AS (
+SELECT client_id, district_id, 1900 + LEFT(LPAD(birth_number::text,6,'0'),2)::int AS birth_year,
+SUBSTRING(LPAD(birth_number::text, 6, '0'),3,2)::int AS coded_month,
+RIGHT(LPAD(birth_number::text, 6, '0'),2)::int AS birth_day
+FROM raw.client
+)
+INSERT INTO clean.client
+SELECT client_id, make_date(birth_year, CASE WHEN coded_month > 50 THEN coded_month - 50 ELSE coded_month END, birth_day),
+CASE WHEN coded_month > 50 THEN 'F' ELSE 'M' END,
+district_id FROM parts;
+
+CREATE TABLE clean.disp(
+disp_id INTEGER PRIMARY KEY,
+client_id INTEGER NOT NULL REFERENCES clean.client(client_id),
+account_id INTEGER NOT NULL REFERENCES clean.account(account_id),
+role TEXT NOT NULL
+);
+
+INSERT INTO clean.disp
+SELECT disp_id, client_id, account_id, CASE(TRIM(type)) WHEN 'OWNER' THEN 'owner' WHEN 'DISPONENT' THEN 'authorised' END
+FROM raw.disp;
 
 CREATE TABLE clean.card(
 card_id INTEGER PRIMARY KEY,
@@ -95,53 +107,22 @@ INSERT INTO clean.card
 SELECT card_id, disp_id, type, to_date(issued,'YYMMDD')
 FROM raw.card;
 
-
-CREATE TABLE clean.client(
-client_id INTEGER PRIMARY KEY,
-birth_date DATE NOT NULL CONSTRAINT check_client_birthdate CHECK (birth_date < '1999-01-01'),
-gender TEXT NOT NULL CONSTRAINT check_client_gender CHECK (gender IN ('M','F')),
-district_id INTEGER NOT NULL REFERENCES clean.district (district_id)
-);
-
-WITH parts AS (
-SELECT client_id, district_id, 1900 + LEFT(LPAD(birth_number::text,6,'0'),2)::int AS birth_year,
-SUBSTRING(LPAD(birth_number::text, 6, '0'),3,2)::int AS coded_month,
-RIGHT(LPAD(birth_number::text, 6, '0'),2)::int 
-FROM raw.client
-)
-INSERT INTO clean.client
-SELECT client_id, make_date(birth_year, CASE WHEN coded_month > 50 THEN coded_month - 50 ELSE coded_month END, birth_day),
-CASE WHEN coded_month > 50 THEN 'F' ELSE 'M' END,
-district_id FROM parts;
-
-CREATE TABLE clean.disp(
-disp_id INTEGER PRIMARY KEY,
-client_id INTEGER NOT NULL REFERENCES clean.client(client_id),
-account_id INTEGER NOT NULL REFERENCES clean.accout(account_id),
-role TEXT NOT NULL
-);
-
-INSERT INTO clean.disp
-SELECT disp_id, client_id, account_id, CASE(TRIM(type)) WHEN 'OWNER' THEN 'owner' WHEN 'DISPONENT' THEN 'authorised' END
-FROM raw.disp;
-
-
 CREATE TABLE clean.loan (
   loan_id          INTEGER PRIMARY KEY,
   account_id       INTEGER NOT NULL REFERENCES clean.account (account_id),
   loan_date        DATE    NOT NULL,
   amount           NUMERIC NOT NULL CHECK (amount > 0),
-  duration_months  INTEGER NOT NULL,
-  monthly_payment  NUMERIC NOT NULL,
+  duration_months  INTEGER NOT NULL CHECK (duration_months IN (12,24,36,48,60)),
+  monthly_payment  NUMERIC NOT NULL CHECK (monthly_payment > 0),
   status           TEXT    NOT NULL CHECK (status IN ('A', 'B', 'C', 'D')),
   status_label     TEXT    NOT NULL
 );
- 
+
 INSERT INTO clean.loan
 SELECT
   loan_id,
   account_id,
-  date,
+  loan_date,
   amount,
   duration,
   payments,
@@ -183,7 +164,7 @@ FROM raw.order;
 CREATE TABLE clean.trans (
   trans_id         INTEGER PRIMARY KEY,
   account_id       INTEGER NOT NULL REFERENCES clean.account (account_id),
-  trans_date       DATE    NOT NULL,
+  transaction_date       DATE    NOT NULL,
   direction        TEXT    NOT NULL,
   operation        TEXT,
   amount           NUMERIC NOT NULL,
@@ -198,7 +179,7 @@ INSERT INTO clean.trans
 SELECT
   trans_id,
   account_id,
-  date,
+  transaction_date,
   CASE TRIM(type)
     WHEN 'PRIJEM' THEN 'credit'
     WHEN 'VYDAJ'  THEN 'debit'
@@ -226,3 +207,4 @@ SELECT
   NULLIF(TRIM(bank), ''),
   account::text
 FROM raw.trans;
+COMMIT;
