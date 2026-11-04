@@ -130,7 +130,7 @@ CREATE TABLE clean.loan (
   loan_id          INTEGER PRIMARY KEY,
   account_id       INTEGER NOT NULL REFERENCES clean.account (account_id),
   loan_date        DATE    NOT NULL,
-  amount           NUMERIC NOT NULL,
+  amount           NUMERIC NOT NULL CHECK (amount > 0),
   duration_months  INTEGER NOT NULL,
   monthly_payment  NUMERIC NOT NULL,
   status           TEXT    NOT NULL CHECK (status IN ('A', 'B', 'C', 'D')),
