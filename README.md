@@ -14,3 +14,8 @@ References was very important also to establish relationships between the tables
 
 # Preliminary Analysis
 This was done in the 'Preliminary.sql' file and essentially was used to explore the data and produce some summary statistics and assess the structure fully. There are 8 tables which are related to one another and displayed in the image here XXX. There are 682 loans in total, 
+
+# Analysis
+
+# Views
+The purpose of this is to create the necessary tables in order to create the correct visuals in Power BI. The reason views are used is due to the fact that the raw tables are not ideal for visualising and telling the appropriate story about the data. A view allows us to see a different side of the raw data ad the views have been catered to visualise the most important data/metrics.
