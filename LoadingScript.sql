@@ -1,3 +1,4 @@
+BEGIN;
 CREATE SCHEMA raw;
 CREATE TABLE raw.account(
 account_id INTEGER,
@@ -69,3 +70,4 @@ k_symbol TEXT,
 bank TEXT,
 account INTEGER
 );
+COMMIT;
