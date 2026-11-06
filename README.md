@@ -13,7 +13,11 @@ Implementing constraints into most rows also was necessary but predominantly 'NO
 References was very important also to establish relationships between the tables otherwise the schema would be non-relational. This also dictated the order in which tables were created.
 
 # Preliminary Analysis
-This was done in the 'Preliminary.sql' file and essentially was used to explore the data and produce some summary statistics and assess the structure fully. There are 8 tables which are related to one another and their relationships are displayed below. CREATE IMAGE
+This was done in the 'Preliminary.sql' file and essentially was used to explore the data and produce some summary statistics and assess the structure fully. There are 8 tables which are related to one another and their relationships are displayed below.
+<p align="center">
+  <img src="berka_tables.png" width="32%" alt="Tables present in the dataset">
+</p>
+
 There are 682 loans in total with a total loaned out of £103261740 and there are 76 'bad' loans that total to £15580152, whereby a bad loan is deemed as one with a status of B or D. B means the loan was not paid back and D means the loan is on-track to not be paid which gives an overall default rate of 11.1%. In the data there are 4500 accounts linked to Berka bank but only 682 of them have taken out loans.
 
 # Analysis
