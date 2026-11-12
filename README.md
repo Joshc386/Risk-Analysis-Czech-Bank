@@ -2,7 +2,7 @@
 
 ### What characteristics indicate that a loan is less likely to be paid back?
 
-The aim of this is to investigate whether there are characteristics that define if an individual is likely to pay their loan back or default. Several metrics will be assessed that look at financial data, social data and personal data to try and form a non-discriminatory filter to identify individuals with a larger probability of not paying back their loan.
+The aim of this is to investigate whether there are characteristics that define if an individual is likely to pay their loan back or default. Metrics including affordability, balanced-related metrics and socio-economic metrics were assessed to determine a rule for the bank to filter accounts that apply for loans and flag them as either 'Review', 'Approve' or 'Decline'.
 
 ## Data
 The original data comes from The Berka Dataset which can be found here: https://www.kaggle.com/datasets/marceloventura/the-berka-dataset?select=loan.csv
