@@ -1,4 +1,7 @@
-# Project Aims
+# Risk Analysis for a Czech Bank
+
+### What characteristics indicate that a loan is less likely to be paid back?
+
 The aim of this is to investigate whether there are characteristics that define if an individual is likely to pay their loan back or default. Several metrics will be assessed that look at financial data, social data and personal data to try and form a non-discriminatory filter to identify individuals with a larger probability of not paying back their loan.
 
 ## Data
