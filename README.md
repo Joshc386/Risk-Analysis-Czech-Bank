@@ -27,6 +27,7 @@ Conditions for a 'Decline' rating:
 
 Conditions for a 'Review' rating:
 - `affordability_ratio > 0.3 AND months_history < 6`
+
 A loan with figures outside of these conditions were give an 'Approve' rating.
 
 Anything else: 'Approved'.
