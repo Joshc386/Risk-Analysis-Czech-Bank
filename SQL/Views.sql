@@ -73,5 +73,65 @@ pre.avg_balance, pre.minimum_balance, pre.transactions,
 pre.months_overdrawn, pre.account_age_in_days, pre.had_card_before_loan
 FROM analytics.view_loan_base base
 JOIN analytics.view_pre_loan pre USING(loan_id);
+
+CREATE VIEW analytics.view_loan_decisions AS
+SELECT loan_id, period, status, is_bad, loan_amount, monthly_payment, duration_months,
+months_history, minimum_balance, affordability_ratio, months_overdrawn,
+CASE
+WHEN months_overdrawn > 0 THEN 'Decline'
+WHEN months_history = 6 AND minimum_balance < 7500 THEN 'Decline'
+WHEN months_history < 6 AND affordability_ratio > 0.3 THEN 'Review'
+ELSE 'Approve' END AS decision,
+CASE
+WHEN months_overdrawn > 0 THEN 'Overdrawn before loan'
+WHEN months_history = 6 AND minimum_balance < 7500 THEN 'Low minimum balance'
+WHEN months_history < 6 AND affordability_ratio > 0.3 THEN 'High affordability ratio'
+ELSE 'Passed all checks' END AS decision_reason
+FROM analytics.view_loan_features;
+
+CREATE VIEW analytics.view_lgd_by_status AS
+WITH repayments AS (
+SELECT loan.loan_id, loan.status, loan.amount, COALESCE(SUM(trans.amount),0) AS repaid
+FROM clean.loan
+LEFT JOIN clean.trans
+ON trans.account_id = loan.account_id AND trans.purpose = 'loan payment' AND trans.transaction_date >= loan.loan_date
+GROUP BY loan.loan_id, loan.status, loan.amount
+)
+SELECT status, COUNT(*) AS loans, SUM(amount) AS amount_owed, SUM(repaid) AS repaid,
+ROUND(1 - SUM(repaid) / SUM(amount), 3) AS unrepaid_share
+FROM repayments
+GROUP BY status;
+
+CREATE VIEW analytics.view_rule_profit_by_rate AS
+WITH rates AS (
+SELECT generate_series(0.00, 0.12, 0.005) AS annual_rate
+),
+lgd AS (
+SELECT unrepaid_share FROM analytics.view_lgd_by_status WHERE status = 'B'
+),
+principal_calc AS (
+SELECT r.annual_rate, d.period, d.is_bad, d.decision, d.loan_amount,
+CASE WHEN r.annual_rate = 0 THEN d.loan_amount
+ELSE d.monthly_payment * (1 - POWER(1 + r.annual_rate/12, -d.duration_months)) / (r.annual_rate/12)
+END AS principal
+FROM analytics.view_loan_decisions d
+CROSS JOIN rates r
+),
+loan_profit AS (
+SELECT p.annual_rate, p.period, p.is_bad, p.decision,
+CASE WHEN p.is_bad = 1 THEN -(p.principal - (1 - lgd.unrepaid_share) * p.loan_amount)
+ELSE p.loan_amount - p.principal END AS profit
+FROM principal_calc p
+CROSS JOIN lgd
+)
+SELECT period, annual_rate,
+ROUND(SUM(profit)) AS approve_all_profit,
+ROUND(SUM(profit) FILTER (WHERE decision <> 'Decline')) AS rule_profit,
+ROUND(SUM(profit) FILTER (WHERE is_bad = 1)) AS approve_all_bad_cost,
+ROUND(SUM(profit) FILTER (WHERE is_bad = 1 AND decision <> 'Decline')) AS rule_bad_cost,
+ROUND(SUM(profit) FILTER (WHERE decision <> 'Decline') - SUM(profit)) AS rule_vs_approve_all
+FROM loan_profit
+GROUP BY period, annual_rate;
+
 COMMIT;
 
