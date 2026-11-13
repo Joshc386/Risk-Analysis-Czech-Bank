@@ -21,12 +21,12 @@ not paying back 23.2% of the loan on average.
 ## Results
 The final rule was determined using 4 metrics: months_overdrawn, months_history, minimum_balance and the affordability ratio.
 Conditions for a 'Decline' rating:
-/item `months_overdrawn > 0`
-/item `months_history = 6`
-/item `minimum_balance < 7500`
+- `months_overdrawn > 0`
+-  `months_history = 6`
+- `minimum_balance < 7500`
 
 Conditions for a 'Review' rating:
-/item `affordability_ratio > 0.3 AND months_history < 6`
+- `affordability_ratio > 0.3 AND months_history < 6`
 A loan with figures outside of these conditions were give an 'Approve' rating.
 
 Anything else: 'Approved'.
