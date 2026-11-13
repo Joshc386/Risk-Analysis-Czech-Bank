@@ -74,114 +74,16 @@ Note for the cutoff values, I started it at 150 rather than 0 due to the fact th
 ## Minimum Balance
 This is where a large portion of the analysis was performed and the reason for this focus is that it reveals an insight into the borrower's floor/cushion before their next paycheck. An average balance can be inflated by temporary lumpsums, ie straight after payday before any payments for the month have left their account, and therefore are less representative of the account's ability to pay back the loan and a maximum balance again can be inflated by temporary payments or pre-bills being paid. The minimum balance represents the extra money leftover after all expenses and bills have been paid. If this is large it shows that the account has the potential to pay back their loan comfortably. If an account dips to very close to 0 often also then they have no margin for error for an unexpected expense which when that may happen can easily lead to missing loan repayments.
 For the entire minimum analysis I had a filtering clause that looked at only loans where there months_history = 6 which due to the way I defined months_history means accounts with 6 or more months of transaction history prior to the loan being taken out. This is included due to the fact that many newer accounts have a lower minimum balance simply because they are newer which is noise rather than indicative of a signal. This excludes 82 loans in total with 81 of them being in the lowest minimum balance band and 1 being in the second lowest salary band. I decided to split the data into 4 bands initially based on the minimum balance to look at the band minima and maxima as well as the number of bad loans and default rate in each. The lowest band (after applying the months_history = 6 filter) has 72.6% of all bad loans and has a default rate of 50.56%. Compared to the higher 3 bands the highest default rate is 4.73% only, showing that the minimum balance is very likely to be a determinant in the likelihood of an individual paying back their loan in full.
-As this has produced a clear potential sign that minimum balance could help in making a rule, I used the test-train split and assessed different cutoff values in the training set, looked at what cutoff was 'practical' in regards to rejecting a good amount of bad loans and rejecting a sall number of good loans as well as the bad value avoided and the good value declined and found that 
-he filter of months_history = 6 is largely significant here. This filters to only loans from accounts that 
-have at least 6 months of history/transactions with the bank prior to taking out a loan. Just looking
-at each minimum balance band and all loans within those bands the default rate for the lowest band is just over 32%.
-Looking at the lowest band with the 6 months filter we see that the default rate goes up to 50.56%. The reason
-this is needed is that many newer accounts have a lower minimum balance simply due to account age. If 
-we remove the months_history filter the lowest minimum balance band has an average age of 309 days and
-the upper 3 tiers have ages of ~427 days. Adding in the 6 month filter the average account age for the 
-lowest band goes up to 462 days, showing that this filter eliminates a lot of the younger accounts and this
-could show that these accounts are in the lower band simply because they are newer.
+As this has produced a clear potential sign that minimum balance could help in making a rule, I used the test-train split and assessed different cutoff values in the training set, looked at what cutoff was 'practical' in regards to rejecting a good amount of bad loans and rejecting a small number of good loans as well as the bad value avoided and the good value declined and found that at a minimum balance of CZK 7,500 was an appropriate cutoff given the percentage of bad loans flagged correctly and incorrectly flagged good loans.
+A statistical test was performed on this cutoff value to see if the difference between the rate at which loans that flagged loans were bad and the rate at which unflagged loans were bad. The difference in these 2 rates is 38.5 percentage points with a confidence interval at 95% of 25.3 - 51.7 and a z-value of 9.2, this corresponds to a p-value of p = $10^{-20}$, showing that the chances of this being due to noise is very unlikely and that this gap is very likely a real effect of this cutoff.
 
-Trade-off at each threshold value. Rule: decline if the minimum balance < cutoff value
+The confidence interval represents the interval which the size of the gap would fall into 95% of the time. The interval is quite wide either side at 13.2 percentage points, most likely due to there only being 6 bad loans above the cutoff value. A loan below the cutoff value is 18 times more likely to go bad, given by 40.7/2.2.
 
-### LGD Value
-For status B here the unrepaid share is 0.232 and using the ratio calculated above (1.166) 
-this gives a break-even interest rate of 0.232 x 1.166 ~27%
-A note on C and D: the unrepaid share is high simply because these loans have not yet finished yet
-
--- The rule avoids CZK 5569596 of bad-loan principal and decines 4775232 of good-loan principal, creating 
--- a ratio of ~1.17. But, a decline good loan only costs the bank in interest it would have earned and an approved 
--- bad loan costs only the unrepaid share of its principal, the loss given default or LGD.
--- The dataset does not record the interest paid so a break-even view is used instead but the rule to keep in mind is
--- LGD x 1.17 > lifetime interest earned as a percentage of the principal.
--- Assuming bad loans lose ~50% of principal still means that the rule pays as long as good loans do not earn
--- more than ~58% of principal interest over their life, which is far above the typical consumer-loan returns.
--- The ratios can be viewed by running line 126.
-
-
-Want to look at the test rows here. For finished loans, 41 were finished
-with 2/3 flagged correctly as bad and 16/38 flagged incorrectly as bad that 
-were actually good, but this is quite a small sample size at only 41 loans and only 3 bad
-loans in total so it is insufficient evidence.
-For the running test loans 80% of bad loans were correctly
-flagged as bad and only 10.1% of good loans were incorrectly fagged as bad, showing
-the cutoff to be quite good at surfacing potential bad loans.
-
-This test at the chosen cutoff shows 54 loans to be rejected where 22 of them were bad and 32 of them were good.
-Test period has 296 good, 'mature' loans therefore 32/296 = 10.8% of good loans wrongly flagged.
-40.7% of loans flagged are bad loans and 2.2% of unflagged loans were bad. False positive (falsely flagging a good loan)
-rate is 10.8% and false negative (flagging a bad loan as good) rate is 2.2%. CI at 95% is 25.3 - 51.7 pp and 
-z=9.2 corresponds to p~10^-20 and represents the probability of seeing a gap of 38.5 percentage points between if there is 
-no real difference and is strong evidence to suggest that this gap is not due to random noise.
-
-The confidence interval represents the interval which the size of the gap would fall into 95% of the time. 
-The width is quite wide either side at 13.2 percentage points but this is mostly due to smaller groups. The
-effect is definitely present but the size is uncertain. NOTE: the unflagged group only has 6 bad loans which is fine
-but it just clears the requirement of 5 for the normal approximation. this analysis shows the effect is real
-but does not quantify the effect of it
+### Unrepaid Share of loan types
+The repayments CTE looks at how much on average each loan did not pay back. A loans had no remaining share to pay back, hence the status, B loans had an unrepaid share on average of 23.2%, C loans had 58.2% and D had 60.7% on average. C and D loans were still running at the time the dataset finished but the important row is for status B. This value of 23.2% is assumed to be across all bad loans for when they inevitably finish: all 76 currently rated bad loans are assumed to have an average unrepaid share of the loan of 23.2% essentially.
 
 ## Months Overdrawn
--- Can see that this is a huge discriminant in finding out if a loan will be good or bad.
--- Every single loan given out to an account that had at least 1 month of being in overdraft was a bad loan
--- but this is unclear if that is due to small sample size as only 20 accounts had months of overdraft
--- before the loan was take out compared to 662 that did not, but the fact that 100% of loans with at least 1
--- month overdrawn lead to 'B' or 'D' ratings is significant. It catches 26.3% of all bad loans
-
--- Very clear to see that even with the train/test split we see that 
--- if an account had any months where they were overdrawn prior to taking their
--- loan out the loan is bad 100% of the time with 9 bad loans in the train split
--- and 11 of them in the test split.
--- There is quite a small sample size with the overdrawn bad loans so taking the
--- numbers at face-value is unwise here. Producing confidence intervals would tell us
--- whether the results were due to a small-sample accident or whether they are 'genuine'.
--- The confidence intervals reveal that the results are not due to a small-sample accident
--- as the lower bound in the test-overdrawn category is almost 9 times larger than
--- the highest plausible rate for everyone else.
--- Looking at the duration of loans is more of a summary page rather than
--- anywhere to investigate further. Largest issue with this feature is that 
--- a large proportion of the loans are still running at the end of this dataset and 
--- as there is no consistent pattern or signal.
+If an account has at least 1 month of being in overdraft prior to taking their loan out they have a 100% chance of the loan being rated as bad. This could be due to a small sample size as only ~3% of all accounts with loans went into overdraft at all but this is still strong evidence to include it as a feature in the rule.
 
 ## Districts
--- Assessing districts as a whole we can see that per-district there are 
--- not many loans and therefore deriving any conclusions based on the district alone
--- is unwise and will lead to noisy and possibly incorrect interpretations.
-
-## The Rule
-- This shows how the rules would have performed if they were applied on the years
--- 1997 and 1998, developed from training on the 93-96 data.
--- Looking at the test data we see that are larger percentage of all loans are declined,
--- going from 11.6% in the train set to 15.3%, with the percentage of bad loans 
--- being declined rising by 21.1 percentage points and the percentage of good loans being
--- declined rising by 4.9 percentage points.
--- The metrics do look good percentage wise but need to assess the 'raw' numbers and assess
--- actual currency amounts.
--- Firstly, the good value declined metric and the bad value approved metric do not 
--- represent missed business or losses. They represent the values of loans that would have been
--- approved or declined incorrectly. Declining good value means the bank misses out on their
--- interest payments that the bank actually would have received and approved bad value 
--- is concerned with the portion of the loan that is not paid back as well as the interest 
--- missed out on.
--- The LGD calculated earlier at 0.232 means that bad loans repay 76.8% of the
--- loan amount, therefore declining a bad loans saves the principal - 0.768 x loan_amount,
--- declining a good loan costs loan_amount - principal (interest they would have earned) and 
--- therefore the net benefit is the sum of savings on bad decline loans - the sum of cost of decline good loans.
-
--- there is no principal stated in the data so I have assumed an annual rate to find the principal amount
--- using the monthly payment. This was calculated using the standard loan annuity formula:
--- monthly_payment * (1 - POWER(1+rate/12, -duration_months))/(rate/12) where the rate is 
--- tested at different values.
-
--- "The data contains no interest rates. Principal was backed out of the monthly payment under an assumed rate,
--- and bad-loan losses were valued using an empirical LGD of 23.2% from finished defaulted loans.
--- At these assumptions, the rule beats approving everyone when the bank's net margin on lending is below about 6–7% a year.
--- Above that margin, the interest given up on wrongly declined good loans outweighs the losses avoided. If the bank's margin is higher,
--- the rule should send applicants to manual review rather than declining them outright."
-
--- Caveats
--- The 0.232 is likely too low for this group. It was measured on finished bad loans (status B), but most of the test bad loans you decline are D, still running. Some have already made payments, and some recovery may still come, so their eventual loss is unknown. Using 0.232 for them is an assumption. If their LGD is higher, the break-even rate rises.
--- The relevant rate is the bank's margin, not the rate charged to the customer. If the bank doesn't lend money out, it also doesn't pay to fund it. So the interest given up on a declined good loan is really the margin above the funding cost, which makes the rule look better than the table does.
--- No time value, collateral or collection costs are included. Name these as limitations rather than modelling them.
+Looking at each district individually there are very few with a large enough number of loans taken out never mind bad loans for them to be analysed in any detail. The Prague district has the most number of loans at 84 but there are only 7 bad loans here. Many have 1 or 0 bad loans with less than 10 loans total so it is very difficult to analyse them in any detail as results will be noisy.
