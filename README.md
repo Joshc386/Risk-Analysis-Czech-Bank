@@ -46,4 +46,4 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 ## Data
 The original data source can be located here and is publicly available to be downloaded [here](https://www.kaggle.com/datasets/marceloventura/the-berka-dataset?) and the page defining the tables and columns is located on at [this location](https://webpages.charlotte.edu/mirsad/itcs6265/group1/index.html) .
 
-Further detail about the SQL code and logic behind the decisions I made is available via the [methodology page] (Methodology.md).
+Further detail about the SQL code and logic behind the decisions I made is available via the [Methodology page](SQL/Methodology.md).
