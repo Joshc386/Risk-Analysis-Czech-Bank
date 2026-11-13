@@ -43,6 +43,12 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 
 - `months_history`: in the code this is only used as `= 6` or `> 6` but where it says `= 6` this means at least a 6-month history with the bank and defines more mature accounts with the bank.
 
+## Assumptions and Limitations
+- **No interest rates**: The dataset contains no interest rates and therefore the principal cannot accurately be stated so it had to be calculated by working back from each loan's monthly payments at an assumed rate, which affects the profit figures largely.
+- **Loss Rate**: Bad loans are assumed to lose 23.2% of the amount owed but this was measured purely on the 31 bad unfinished loans. Most of the bad loans in the test datset were still running so their true loss is largely uncertain as a result.
+- **Unfinished Loans**: Loans still running at the end of the dataset have the potential to change status so the final count of good and bad loans in reality is likely to have changed compared to what was recorded.
+- **Small Samples**: The test data has 30 bad loans and only 2 of these are among newer accounts which is why the affordability ratio could not be fully validated and set to 'Review'.
+
 ## Data
 The original data source can be located here and is publicly available to be downloaded [here](https://www.kaggle.com/datasets/marceloventura/the-berka-dataset?) and the page defining the tables and columns is located on at [this location](https://webpages.charlotte.edu/mirsad/itcs6265/group1/index.html) .
 
