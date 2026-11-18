@@ -1,0 +1,12 @@
+from scipy.stats import fisher_exact
+odds, p = fisher_exact([[22,32], [8,292]])
+# print(odds, p)
+# fisher's exact test used due to small sample size of bad loans
+
+for x in range(300):
+    bad = 8 + x
+    if fisher_exact([[22,32],[bad, 300-bad]])[1] > 0.05:
+        print(x, bad/300)
+        break
+# produces the number of the approved loans that would have to go bad for the 
+# gap to stop being significant. 73 more loans which makes a 27% bad rate
