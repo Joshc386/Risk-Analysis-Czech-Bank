@@ -8,5 +8,4 @@ for x in range(300):
     if fisher_exact([[22,32],[bad, 300-bad]])[1] > 0.05:
         print(x, bad/300)
         break
-# produces the number of the approved loans that would have to go bad for the 
-# gap to stop being significant. 73 more loans which makes a 27% bad rate
+# produces the number of the approved loans that would have to go bad for the gap to stop being significant. 73 more loans which makes a 27% bad loan rate
