@@ -1,0 +1,105 @@
+// DAX Measures used throughout the report
+
+
+    // ---------- Counts and bad rates ----------
+    // Number of loans in the current filter context:
+    MEASURE 'FactLoanFeatures'[Loan Count] =
+        DISTINCTCOUNT('FactLoanFeatures'[loan_id])
+    // Share of loans that went bad if every loan is approved:
+    MEASURE 'FactRuleProfit'[Bad Rate Approve All] =
+        AVERAGE(FactLoanFeatures[is_bad])
+    // Share of loans that went bad among those the rule approves (Review counts as approved):
+    MEASURE 'FactRuleProfit'[Bad Rate Approved] =
+        CALCULATE([Bad Rate Approve All],DimDecision[decision] <> "Decline")
+    // Overall bad rate, used on the appendix page:
+    MEASURE 'FactLoanFeatures'[Bad loan rate] =
+        AVERAGE(DimAccount[is_bad])
+
+    // ---------- Rule decisions ----------
+    // Number of loans the rule declines:
+    MEASURE 'DimDecision'[Decline Decisions] =
+        CALCULATE(COUNT(DimDecision[decision]),DimDecision[decision] = "Decline")
+    // Number of bad loans the rule declines:
+    MEASURE 'DimDecision'[Declined Bad Loans] =
+        CALCULATE(COUNT(DimDecision[loan_id]),DimDecision[decision] = "Decline", DimLoan[is_bad] = 1)
+    // Share of bad loans the rule declines:
+    MEASURE 'DimDecision'[Declining Bad Loan Rate] =
+        DIVIDE([Declined Bad Loans],SUM(DimLoan[is_bad]))
+    // Share of good loans the rule declines:
+    MEASURE 'DimDecision'[Declining Good Loan Rate] =
+        DIVIDE(
+            CALCULATE(COUNTROWS(FactLoanFeatures),DimDecision[decision] = "Decline", FactLoanFeatures[is_bad] = 0),
+            CALCULATE(COUNTROWS(FactLoanFeatures),FactLoanFeatures[is_bad] = 0)
+        )
+    // Share of declined loans that ended as bad:
+    MEASURE 'DimDecision'[Decline Precision] =
+        DIVIDE([Declined Bad Loans], [Decline Decisions])
+
+    // ---------- 95% Wilson confidence interval for the bad loan rate ----------
+    // Lower bound:
+    MEASURE 'FactLoanFeatures'[Wilson Low] =
+        VAR n = [Loan Count]
+        VAR p = DIVIDE ( SUM ( FactLoanFeatures[is_bad] ), n )
+        VAR z = 1.96
+        RETURN DIVIDE ( p + z^2 / ( 2 * n ) - z * SQRT ( p * ( 1 - p ) / n + z^2 / ( 4 * n^2 ) ), 1 + z^2 / n )
+    // Upper bound:
+    MEASURE 'FactLoanFeatures'[Wilson High] =
+        VAR n = [Loan Count]
+        VAR p = DIVIDE ( SUM ( FactLoanFeatures[is_bad] ), n )
+        VAR z = 1.96
+        RETURN DIVIDE ( p + z^2 / ( 2 * n ) + z * SQRT ( p * ( 1 - p ) / n + z^2 / ( 4 * n^2 ) ), 1 + z^2 / n )
+
+    // ---------- Profit model ----------
+    // Losses on bad loans the rule avoids by declining them:
+    MEASURE 'FactRuleProfit'[Losses Avoided] =
+        SUM(FactRuleProfit[rule_bad_cost]) - SUM(FactRuleProfit[approve_all_bad_cost])
+    // Interest lost on good loans the rule declines:
+    MEASURE 'FactRuleProfit'[Interest Given Up] =
+        [Losses Avoided] - SUM(FactRuleProfit[rule_vs_approve_all])
+    // Lowest margin at which the rule earns less than approving everyone:
+    MEASURE 'FactRuleProfit'[Break-even label] =
+        IF (
+            HASONEVALUE ( FactRuleProfit[period] ),
+            VAR be =
+                CALCULATE (
+                    MIN ( FactRuleProfit[annual_rate] ),
+                    FactRuleProfit[rule_vs_approve_all] < 0
+                )
+            RETURN "≈ " & FORMAT ( be, "0%" ),
+            "Select a period"
+        )
+
+    // ---------- Appendix page ----------
+    // Amount owed minus amount repaid so far:
+    MEASURE 'DimRepayment'[Unpaid Amount To Date] =
+        SUM('DimRepayment'[amount_owed]) - SUM('DimRepayment'[repaid])
+    // Number of accounts overdrawn in the six months before the loan:
+    MEASURE 'DimAccount'[Accounts Overdrawn] =
+        COALESCE(CALCULATE(COUNT(DimAccount[months_overdrawn]),DimAccount[months_overdrawn]<>0),0)
+
+
+// ---------- Calculated columns ----------
+// Good/Bad label for each loan:
+// COLUMN 'FactLoanFeatures'[Outcome] = IF(FactLoanFeatures[is_bad] = 1, "Bad", "Good")
+// Finished (status A, B) or Running (C, D):
+// COLUMN 'DimLoan'[Loan State] = IF(DimLoan[status] IN {"A", "B"}, "Finished", "Running")
+// Approved or Declined (Review counts as approved):
+// COLUMN 'DimDecision'[Rule Outcome] = IF(DimDecision[decision] = "Decline", "Declined", "Approved")
+//
+// ---------- Calculated tables ----------
+// Date table covering the date span of the dataset:
+// TABLE 'DimDate' =
+//     VAR StartDate = DATE(YEAR(MIN('FactLoanFeatures'[loan_date])),1,1)
+//     VAR EndDate = DATE(YEAR(MAX('FactLoanFeatures'[loan_date])),12,31)
+//     RETURN
+//     ADDCOLUMNS(
+//         CALENDAR(StartDate, EndDate),
+//         "Year",YEAR([Date]),
+//         "MonthNo",MONTH([Date]),
+//         "MonthName",FORMAT([Date],"MMM"),
+//         "Quarter","Q"&QUARTER([Date]),
+//         "Week",WEEKNUM([Date],2)
+//     )
+// Shared train/test period table for slicers:
+// TABLE 'DimPeriod' =
+//     DATATABLE("period", STRING, {{"train"}, {"test"}})
