@@ -110,7 +110,7 @@ lgd AS (
 SELECT unrepaid_share FROM analytics.view_lgd_by_status WHERE status = 'B'
 ),
 principal_calc AS (
-SELECT r.annual_rate, d.period, d.is_bad, d.decision, d.loan_amount,
+SELECT r.annual_rate, d.period, d.is_bad, d.decision, d.loan_amount, d.months_overdrawn,
 CASE WHEN r.annual_rate = 0 THEN d.loan_amount
 ELSE d.monthly_payment * (1 - POWER(1 + r.annual_rate/12, -d.duration_months)) / (r.annual_rate/12)
 END AS principal
@@ -118,7 +118,7 @@ FROM analytics.view_loan_decisions d
 CROSS JOIN rates r
 ),
 loan_profit AS (
-SELECT p.annual_rate, p.period, p.is_bad, p.decision,
+SELECT p.annual_rate, p.period, p.is_bad, p.decision, p.months_overdrawn,
 CASE WHEN p.is_bad = 1 THEN -(p.principal - (1 - lgd.unrepaid_share) * p.loan_amount)
 ELSE p.loan_amount - p.principal END AS profit
 FROM principal_calc p
@@ -129,9 +129,19 @@ ROUND(SUM(profit)) AS approve_all_profit,
 ROUND(SUM(profit) FILTER (WHERE decision <> 'Decline')) AS rule_profit,
 ROUND(SUM(profit) FILTER (WHERE is_bad = 1)) AS approve_all_bad_cost,
 ROUND(SUM(profit) FILTER (WHERE is_bad = 1 AND decision <> 'Decline')) AS rule_bad_cost,
-ROUND(SUM(profit) FILTER (WHERE decision <> 'Decline') - SUM(profit)) AS rule_vs_approve_all
+ROUND(SUM(profit) FILTER (WHERE decision <> 'Decline') - SUM(profit)) AS rule_vs_approve_all,
+ROUND(SUM(profit) FILTER (WHERE COALESCE(months_overdrawn,0) = 0) - SUM(profit)) AS overdrawn_only_vs_approve_all
 FROM loan_profit
 GROUP BY period, annual_rate;
 
+CREATE VIEW analytics.view_minbal_thresholds AS
+WITH thresholds AS (SELECT generate_series(0,10000,500) AS cutoff)
+SELECT f.period, t.cutoff,
+ROUND(100.0 * COALESCE(SUM(f.is_bad) FILTER (WHERE f.minimum_balance < t.cutoff),0) / SUM(f.is_bad), 1) AS pct_bad_caught,
+ROUND(100.0 * COUNT(*) FILTER (WHERE f.minimum_balance < t.cutoff AND f.is_bad = 0)
+      / COUNT(*) FILTER (WHERE f.is_bad = 0), 1) AS pct_good_declined
+FROM thresholds t
+CROSS JOIN analytics.view_loan_features f
+WHERE f.minimum_balance IS NOT NULL AND f.months_history = 6
+GROUP BY f.period, t.cutoff;
 COMMIT;
-
