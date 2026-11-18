@@ -7,11 +7,15 @@ It will serve as a screening/filtering aid for the bank's loan officers
 ## Key Findings
 - 11.1% of all loans are rated as 'bad' loans, with 30 of them occurring in 1997-1998 and 46 of them occurring in 1993-1996.
 
-- Using the discovered rule earns the bank more than approving every application if the bank's lending margin is below 7% a year.
+- Using the discovered rule earns the bank more than approving every application if the bank's lending margin is below 7% a year using the test data.
 
 - 100% of accounts with at least 1 month of overdraft prior to the loan being taken out had bad-rated loans (20 of the 76 bad loans).
 
-- The rule catches 73.3% of bad loans and declines only 9.9% of good loans in the test dataset.
+- The rule catches 73.3% of bad loans and declines only 9.9% of good loans in the test dataset compared to 52% and 5% in the train dataset.
+
+- The bad loan approval rate goes from 8.5% without the rule to 2.7% with the rule for the test data and for the training data it goes from 14% to 7.6%.
+
+- Decline precision of bad loans was found to be 40.7% with a confidence interval at 95% of 28.68% - 54.03%. 
 
 ## Results
 The final rule was determined using 4 metrics: months_overdrawn, months_history, minimum_balance and the affordability ratio.
@@ -36,6 +40,10 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 | 6.9% | +10,944 |
 | 7.0% | −5,825 |
 
+### Significance of the test result
+22 of the 54 declined loans (40.7%) were bad against 8 of the 300 approved loans (2.7%) and performing the Fisher's exact test to determine if this gap is due to the rule's decisions being related to which loans went bad gave a p-value of $\approx 10^{-14}$, stating this would pretty much never happen. An odds ratio of 25 here also suggests that a declined loan's odds of going bad is 25 times more than those of an approved loan. 73 more approved loans would have to default before this gap stopped being significant.
+Confidence intervals were calculated as well at 95% and for the bad loan rate it was found to be 1.36% - 5.17%
+
 ## Definitions
 - Bad loan: this is defined as a loan given a status of 'B' or 'D' where status B defines a loan that has finished and was not fully repaid and status D is a loan that is still running and the client is in debt.
 
@@ -44,10 +52,12 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 - `months_history`: in the code this is only used as `= 6` or `> 6` but where it says `= 6` this means at least a 6-month history with the bank and defines more mature accounts with the bank.
 
 ## Assumptions and Limitations
-- **No interest rates**: The dataset contains no interest rates and therefore the principal cannot accurately be stated so it had to be calculated by working back from each loan's monthly payments at an assumed rate, which affects the profit figures largely.
-- **Loss Rate**: Bad loans are assumed to lose 23.2% of the amount owed but this was measured purely on the 31 bad unfinished loans. Most of the bad loans in the test datset were still running so their true loss is largely uncertain as a result.
+- **No interest rates**: The dataset contains no interest rates and therefore the principal cannot accurately be stated so it had to be calculated by working back from each loan's monthly payments at an assumed rate, which affects the profit figures largely. Principal differs to the loan amount as the loan amount is the total repayable but the principal is the total borrowed by the client.
+- **Loss Rate**: Bad loans are assumed to lose 23.2% of the amount owed but this was measured purely on the 31 bad finished loans. Most of the bad loans in the test datset were still running so their true loss is largely uncertain as a result.
 - **Unfinished Loans**: Loans still running at the end of the dataset have the potential to change status so the final count of good and bad loans in reality is likely to have changed compared to what was recorded.
-- **Small Samples**: The test data has 30 bad loans and only 2 of these are among newer accounts which is why the affordability ratio could not be fully validated and set to 'Review'.
+- **Small Samples**: The test data has 30 bad loans and only 2 of these are among newer accounts which is why the affordability ratio could not be fully validated and set to 'Review'. This applies to the overdrawn check as well as this is founded upon only 20 bad loans.
+- **Provisional Results**: 88% of test loans are still running compared to 42% of the training loans, meaning the results produced from the test data is very likely to change as loans finish. Bad loans may recover and god loans may fall behind.
+- **Review loans as approved**: In the test data there are only 4 loans flagged for review which is a very small sample size so they were treated as approved loans.
 
 ## Data
 The original data source can be located here and is publicly available to be downloaded [here](https://www.kaggle.com/datasets/marceloventura/the-berka-dataset?) and the page defining the tables and columns is located on at [this location](https://webpages.charlotte.edu/mirsad/itcs6265/group1/index.html) .
