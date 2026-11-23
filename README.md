@@ -34,7 +34,11 @@ The simple visual above shows how the rate at which bad loans are approved drops
 
 This rule catches 73.3% of the bad loans and 9.9% of good loans are flagged in the test dataset, which would have flagged CZK 4,775,232 worth of good loan value to be declined and CZK 5,569,596 worth of bad value to be flagged to be declined. If the bank's lending margin drops below 7% a year, using the rule earns more than approving every application. Above 7% the interest given up on wrongly declined good loans outweighs the losses avoided on bad loans. The data has no interest rates or loan principals so these had to be calculated through using each loan's monthly payment at an assumed rate and using the 23.2% loss rate, measured from the unrepaid share of all finished bad loans.
 Using an interest rate of 5.5% rule is also profitable compared to approving all loans by CZK 250,773 which is **6.66%** more profitable at an assumed 5.5% margin, showing that the rule would have actually worked on the test data.
-The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if all loans were approved, reinforcing the point of the rule actually being effective.
+The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if all loans were approved, reinforcing the point of the rule actually being effective. The rule needed to be assessed on training data as well as test data and the table below shows summary statistics of the train and test sets.
+<p align="center">
+  <img src="PowerBI/TrainVsTest.png" width="49%" alt="Train vs. Test data performance on KPIs">
+</p>
+
 
 | Assumed annual margin | Rule vs approve-all (CZK, test loans) |
 |:---|---:|
