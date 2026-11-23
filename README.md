@@ -27,6 +27,11 @@ Conditions for a 'Review' rating:
 
 Otherwise, the loan is rated as 'Approve'.
 
+<p align="center">
+  <img src="PowerBI/NoRulevsRule.png" width="49%" alt="Rate of bad loans approved without and with the rule">
+</p>
+The simple visual above shows how the rate at which bad loans are approved drops when the rule is implemented compared to without the rule being implemented. The rate drops from 8.47% to 2.67% which on the surface looks great but this is the tip of the iceberg.
+
 This rule catches 73.3% of the bad loans and 9.9% of good loans are flagged in the test dataset, which would have flagged CZK 4,775,232 worth of good loan value to be declined and CZK 5,569,596 worth of bad value to be flagged to be declined. If the bank's lending margin drops below 7% a year, using the rule earns more than approving every application. Above 7% the interest given up on wrongly declined good loans outweighs the losses avoided on bad loans. The data has no interest rates or loan principals so these had to be calculated through using each loan's monthly payment at an assumed rate and using the 23.2% loss rate, measured from the unrepaid share of all finished bad loans.
 Using an interest rate of 5.5% rule is also profitable compared to approving all loans by CZK 250,773 which is **6.66%** more profitable at an assumed 5.5% margin, showing that the rule would have actually worked on the test data.
 The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if all loans were approved, reinforcing the point of the rule actually being effective.
@@ -44,6 +49,9 @@ Below we can see a visual representation of this table.
 <p align="center">
   <img src="PowerBI/RuleVsApproveAllByMargin.png" width="49%" alt="Rule vs. Approve All Outcomes for each assumed annual margin">
 </p>
+This chart demonstrates the financial impact of implementing the loan approval rule compared to approving every loan. The light blue line shows the net benefit of implementing only the overdrawn check compared with approving all loans and the dark blue line shows the net benefit if implementing the full loan rule compared with approving every loan. What we can see at ~5% is that the full rule and the overdrawn check produce the same benefit despite the overdrawn check being much simpler. Then at larger margins the overdrawn check produces a larger financial benefit than the rule. This intersection is important as it shows very clearly what would be a more beneficial implementation depending on the bank's operating margin. 
+Both lines trend downwards towards being negative but the blue line has a much steeper gradient, showing the rule's financial advantage to decrease much more quickly than the overdrawn check against approving all. The gradient is steeper for the rule line here because it increases the number of profitable loans that are rejected compared to the rate at which the overdrawn check does. As the profit margin changes, the cost of rejecting good loans changes relative to the benefit of avoiding bad loans and therefore a more restrictive approval rule is not necessarily the better option.
+Overall, tis chart shows that the optimal loan approval strategy is largely dependent on the expected profitability of lending rather than solely due to the effectiveness of the screening rule.
 
 ### Significance of the test result
 22 of the 54 declined loans (40.7%) were bad against 8 of the 300 approved loans (2.7%) and performing the Fisher's exact test to determine if this gap is due to the rule's decisions being related to which loans went bad gave a p-value of $\approx 10^{-14}$, stating this would pretty much never happen. An odds ratio of 25 here also suggests that a declined loan's odds of going bad is 25 times more than those of an approved loan. 73 more approved loans would have to default before this gap stopped being significant.
