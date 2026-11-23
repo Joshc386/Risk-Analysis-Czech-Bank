@@ -41,7 +41,9 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 | 7.0% | −5,825 |
 
 Below we can see a visual representation of this table.
-X
+<p align="center">
+  <img src="PowerBI/RuleVsApproveAllByMargin.png" width="49%" alt="Rule vs. Approve All Outcomes for each assumed annual margin">
+</p>
 
 ### Significance of the test result
 22 of the 54 declined loans (40.7%) were bad against 8 of the 300 approved loans (2.7%) and performing the Fisher's exact test to determine if this gap is due to the rule's decisions being related to which loans went bad gave a p-value of $\approx 10^{-14}$, stating this would pretty much never happen. An odds ratio of 25 here also suggests that a declined loan's odds of going bad is 25 times more than those of an approved loan. 73 more approved loans would have to default before this gap stopped being significant.
