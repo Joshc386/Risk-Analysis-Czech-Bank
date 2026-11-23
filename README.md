@@ -31,7 +31,7 @@ This rule catches 73.3% of the bad loans and 9.9% of good loans are flagged in t
 Using an interest rate of 5.5% rule is also profitable compared to approving all loans by CZK 250,773 which is **6.66%** more profitable at an assumed 5.5% margin, showing that the rule would have actually worked on the test data.
 The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if all loans were approved, reinforcing the point of the rule actually being effective.
 
-| Assumed annual margin | Rule vs approve-all (CZK, 1997–98 loans) |
+| Assumed annual margin | Rule vs approve-all (CZK, test loans) |
 |:---|---:|
 | 0.0% | +1,292,146 |
 | 2.0% | +894,112 |
@@ -40,9 +40,12 @@ The rule also avoids 74.6% of bad-loan losses at a 5.5% margin compared to if al
 | 6.9% | +10,944 |
 | 7.0% | −5,825 |
 
+Below we can see a visual representation of this table.
+X
+
 ### Significance of the test result
 22 of the 54 declined loans (40.7%) were bad against 8 of the 300 approved loans (2.7%) and performing the Fisher's exact test to determine if this gap is due to the rule's decisions being related to which loans went bad gave a p-value of $\approx 10^{-14}$, stating this would pretty much never happen. An odds ratio of 25 here also suggests that a declined loan's odds of going bad is 25 times more than those of an approved loan. 73 more approved loans would have to default before this gap stopped being significant.
-Confidence intervals were calculated as well at 95% and for the bad loan rate it was found to be 1.36% - 5.17%
+Confidence intervals were calculated as well at 95% and for the bad loan rate it was found to be 1.36% - 5.17%. Then for the the decline precision of bad loans the confidence interval at 95% was 28.68% - 54.03%.
 
 ## Definitions
 - Bad loan: this is defined as a loan given a status of 'B' or 'D' where status B defines a loan that has finished and was not fully repaid and status D is a loan that is still running and the client is in debt.
